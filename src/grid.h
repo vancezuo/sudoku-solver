@@ -21,6 +21,7 @@ public:
   Grid(int subrows, int subcols, vector<int> grid);
 
   int& operator ()(int row, int col);
+  int& operator [](int index);
 
   int getSubrows() const { return subrows_; }
   int getSubcols() const { return subcols_; }

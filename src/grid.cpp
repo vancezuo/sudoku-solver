@@ -36,6 +36,10 @@ int& Grid::operator ()(int row, int col) {
   return values_[getIndex(row, col)];
 }
 
+int& Grid::operator [](int index) {
+  return values_[index];
+}
+
 int Grid::getRows() const {
   return side_;
 }
@@ -44,11 +48,11 @@ int Grid::getCols() const {
   return side_;
 }
 
-int sudoku::Grid::getRange() const {
+int Grid::getRange() const {
   return side_;
 }
 
-int sudoku::Grid::getSize() const {
+int Grid::getSize() const {
   return values_.size();
 }
 
