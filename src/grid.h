@@ -29,7 +29,8 @@ public:
 
   int getRows() const;
   int getCols() const;
-  int getRange() const;
+  int getMinValue() const;
+  int getMaxValue() const;
   int getSize() const;
 
   int getValue(int row, int col) const;

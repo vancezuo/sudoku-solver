@@ -93,12 +93,20 @@ TEST(Grid, getCols) {
   EXPECT_EQ(grid.getCols(), 6);
 }
 
-// Tests the get range of values method.
-TEST(Grid, getRange) {
+// Tests the get minimum valid value method.
+TEST(Grid, getMinValue) {
   const int subrows = 2, subcols = 3;
   const Grid grid(subrows, subcols);
 
-  EXPECT_EQ(grid.getRange(), 6);
+  EXPECT_EQ(grid.getMaxValue(), 1);
+}
+
+// Tests the get maximum valid value method.
+TEST(Grid, getMaxValue) {
+  const int subrows = 2, subcols = 3;
+  const Grid grid(subrows, subcols);
+
+  EXPECT_EQ(grid.getMaxValue(), 6);
 }
 
 // Tests the get values vector size method.

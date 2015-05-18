@@ -19,7 +19,7 @@ Solver::Solver(Grid grid):
 
   // Enables all moves for each square.
   for (int i = 0; i < grid.getSize(); ++i) {
-    for (int j = 1; j <= grid.getRange(); ++j)
+    for (int j = 1; j <= grid.getMaxValue(); ++j)
       movesVec_[i].emplace(j);
   }
 
@@ -124,7 +124,7 @@ int Solver::solve() {
   for (int i = 0; i < grid_.getSize(); ++i) {
     if (unsetIndexes_.count(i) == 0)
       continue;
-    for (int j = 1; j <= grid_.getRange(); ++j) {
+    for (int j = grid_.getMinValue(); j <= grid_.getMaxValue(); ++j) {
       if (movesVec_[i].count(j) == 0)
         continue;
       int row = i / grid_.getCols();

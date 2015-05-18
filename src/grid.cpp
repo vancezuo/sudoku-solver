@@ -48,7 +48,11 @@ int Grid::getCols() const {
   return side_;
 }
 
-int Grid::getRange() const {
+int Grid::getMinValue() const {
+  return 1;
+}
+
+int Grid::getMaxValue() const {
   return side_;
 }
 
