@@ -120,24 +120,19 @@ bool Solver::unpropogateConstraint(int row, int col, int value) {
 }
 
 int Solver::solve() {
-  vector<int> indexes(begin(unsetIndexes_), end(unsetIndexes_));
-
-  // sort(begin(squares), end(squares));
-
   int steps = 0;
-  for (size_t i = 0; i < indexes.size(); ++i) {
-    unordered_set<int>& moves = movesVec_[indexes[i]];
-    vector<int> values(begin(moves), end(moves));
-
-    // sort(begin(values), end(values));
-
-    for (size_t j = 0; j < values.size(); ++j) {
-      int row = indexes[i] / grid_.getCols();
-      int col = indexes[i] % grid_.getCols();
+  for (int i = 0; i < grid_.getSize(); ++i) {
+    if (unsetIndexes_.count(i) == 0)
+      continue;
+    for (int j = 1; j <= grid_.getRange(); ++j) {
+      if (movesVec_[i].count(j) == 0)
+        continue;
+      int row = i / grid_.getCols();
+      int col = i % grid_.getCols();
 
       steps++;
 
-      if (!assign(row, col, values[j]))
+      if (!assign(row, col, j))
         continue;
 
       steps += solve();
@@ -147,7 +142,6 @@ int Solver::solve() {
 
       unassign(row, col);
     }
-
   }
 
   return steps;
