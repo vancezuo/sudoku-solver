@@ -66,7 +66,18 @@ TEST(Grid, operatorParenthesis) {
   }
 }
 
-// Tests the get rows (in grid) function.
+// Tests the operator [].
+TEST(Grid, operatorBrackets) {
+  const int subrows = 1, subcols = 2;
+  Grid grid(subrows, subcols);
+
+  for (unsigned int i = 0; i < grid.getValues().size(); i++) {
+    grid[i] = i;
+    EXPECT_EQ(grid[i], i);
+  }
+}
+
+// Tests the get rows (in grid) method.
 TEST(Grid, getRows) {
   const int subrows = 2, subcols = 3;
   const Grid grid(subrows, subcols);
@@ -74,7 +85,7 @@ TEST(Grid, getRows) {
   EXPECT_EQ(grid.getRows(), 6);
 }
 
-// Tests the get columns (in grid) function.
+// Tests the get columns (in grid) method.
 TEST(Grid, getCols) {
   const int subrows = 2, subcols = 3;
   const Grid grid(subrows, subcols);
@@ -82,7 +93,37 @@ TEST(Grid, getCols) {
   EXPECT_EQ(grid.getCols(), 6);
 }
 
-// Tests the get index in grid of (row, col) function.
+// Tests the get range of values method.
+TEST(Grid, getRange) {
+  const int subrows = 2, subcols = 3;
+  const Grid grid(subrows, subcols);
+
+  EXPECT_EQ(grid.getRange(), 6);
+}
+
+// Tests the get values vector size method.
+TEST(Grid, getSize) {
+  const int subrows = 2, subcols = 3;
+  const Grid grid(subrows, subcols);
+
+  EXPECT_EQ(grid.getSize(), 36);
+}
+
+// Tests the get value at (row, col) method.
+TEST(Grid, getValue) {
+  const int subrows = 1, subcols = 2;
+  Grid grid(subrows, subcols);
+
+  for (int i = 0; i < grid.getRows(); i++) {
+    for (int j = 0; j < grid.getCols(); j++) {
+      grid(i, j) = i + j;
+      ASSERT_EQ(grid(i, j), i + j);
+      EXPECT_EQ(grid.getValue(i,j), i + j);
+    }
+  }
+}
+
+// Tests the get index in grid of (row, col) method.
 TEST(Grid, getIndex) {
   const int subrows = 2, subcols = 3;
   const Grid grid(subrows, subcols);
@@ -96,7 +137,7 @@ TEST(Grid, getIndex) {
   }
 }
 
-// Tests the get row neighbor values function.
+// Tests the get row neighbor values method.
 TEST(Grid, getRowValues) {
   const int subrows = 2, subcols = 3;
   const std::vector<int> initGrid = {
@@ -128,7 +169,7 @@ TEST(Grid, getRowValues) {
   }
 }
 
-// Tests the get column neighbor values function.
+// Tests the get column neighbor values method.
 TEST(Grid, getColValues) {
   const int subrows = 2, subcols = 3;
   const std::vector<int> initGrid = {
@@ -160,7 +201,7 @@ TEST(Grid, getColValues) {
   }
 }
 
-// Tests the get sub-grid neighbor values function.
+// Tests the get sub-grid neighbor values method.
 TEST(Grid, getSubgridValues) {
   const int subrows = 2, subcols = 3;
   const std::vector<int> initGrid = {
