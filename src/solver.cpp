@@ -147,9 +147,6 @@ int Solver::solve() {
   return steps;
 }
 
-void Solver::solveHelper() {
-}
-
 void Solver::reset() {
   for (int i = 0; i < grid_.getRows(); ++i) {
     for (int j = 0; j < grid_.getCols(); ++j) {

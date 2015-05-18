@@ -57,7 +57,6 @@ private:
 
   bool propogateConstraint(int row, int col, int value, int origIndex);
   bool unpropogateConstraint(int row, int col, int value);
-  void solveHelper();
 };
 
 } /* namespace sudoku */
