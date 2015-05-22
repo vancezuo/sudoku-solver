@@ -34,7 +34,11 @@ public:
   int getSize() const;
 
   int getValue(int row, int col) const;
+  int getValue(int index) const;
+
   int getIndex(int row, int col) const;
+  int getRow(int index) const;
+  int getCol(int index) const;
 
   vector<int> getRowValues(int row, int col) const;
   vector<int> getColValues(int row, int col) const;

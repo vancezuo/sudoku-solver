@@ -98,7 +98,7 @@ TEST(Grid, getMinValue) {
   const int subrows = 2, subcols = 3;
   const Grid grid(subrows, subcols);
 
-  EXPECT_EQ(grid.getMaxValue(), 1);
+  EXPECT_EQ(grid.getMinValue(), 1);
 }
 
 // Tests the get maximum valid value method.
@@ -118,7 +118,7 @@ TEST(Grid, getSize) {
 }
 
 // Tests the get value at (row, col) method.
-TEST(Grid, getValue) {
+TEST(Grid, getValueRowCol) {
   const int subrows = 1, subcols = 2;
   Grid grid(subrows, subcols);
 
@@ -131,6 +131,18 @@ TEST(Grid, getValue) {
   }
 }
 
+// Tests the get value at index method.
+TEST(Grid, getValueIndex) {
+  const int subrows = 1, subcols = 2;
+  Grid grid(subrows, subcols);
+
+  for (int i = 0; i < grid.getSize(); i++) {
+    grid[i] = i;
+    ASSERT_EQ(grid[i], i);
+    EXPECT_EQ(grid.getValue(i), i);
+  }
+}
+
 // Tests the get index in grid of (row, col) method.
 TEST(Grid, getIndex) {
   const int subrows = 2, subcols = 3;
@@ -140,6 +152,34 @@ TEST(Grid, getIndex) {
   for (int i = 0; i < grid.getRows(); i++) {
     for (int j = 0; j < grid.getCols(); j++) {
       EXPECT_EQ(grid.getIndex(i, j), index);
+      index++;
+    }
+  }
+}
+
+// Tests the get row of index method.
+TEST(Grid, getRow) {
+  const int subrows = 2, subcols = 3;
+  const Grid grid(subrows, subcols);
+
+  int index = 0;
+  for (int i = 0; i < grid.getRows(); i++) {
+    for (int j = 0; j < grid.getCols(); j++) {
+      EXPECT_EQ(grid.getRow(index), i);
+      index++;
+    }
+  }
+}
+
+// Tests the get col of index method.
+TEST(Grid, getCol) {
+  const int subrows = 2, subcols = 3;
+  const Grid grid(subrows, subcols);
+
+  int index = 0;
+  for (int i = 0; i < grid.getRows(); i++) {
+    for (int j = 0; j < grid.getCols(); j++) {
+      EXPECT_EQ(grid.getCol(index), j);
       index++;
     }
   }

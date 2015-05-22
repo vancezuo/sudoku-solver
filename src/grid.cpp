@@ -64,8 +64,21 @@ int Grid::getValue(int row, int col) const {
   return values_[getIndex(row, col)];
 }
 
+int Grid::getValue(int index) const {
+  return values_[index];
+}
+
 int Grid::getIndex(int row, int col) const {
   return row * getCols() + col;
+}
+
+
+int Grid::getRow(int index) const {
+  return index / getCols();
+}
+
+int Grid::getCol(int index) const {
+  return index % getCols();
 }
 
 std::vector<int> Grid::getRowValues(int row, int col) const {
