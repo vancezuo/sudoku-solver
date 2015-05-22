@@ -7,15 +7,21 @@
 
 #include <src/solver.h>
 #include <iterator>
+#include <unordered_map>
 #include <utility>
+#include <algorithm>
 
 namespace sudoku {
 
-Solver::Solver(Grid grid):
+Solver::Solver(Grid grid, VariableSortType::VarSort varSort,
+    ValueSortType::ValSort valSort):
         grid_(grid.getSubrows(), grid.getSubcols()),
         origSet_(grid.getSize()),
         movesVec_(grid.getSize()),
         historyVec_(grid.getSize()) {
+
+  varSort_ = varSort;
+  valSort_ = valSort;
 
   // Enables all moves for each square.
   for (int i = 0; i < grid.getSize(); ++i) {
@@ -26,7 +32,7 @@ Solver::Solver(Grid grid):
   // Assigns squares with preset values.
   for (int i = 0; i < grid.getSize(); ++i) {
     if (grid[i] != 0) {
-      origSet_[i] = assign(i / grid.getCols(), i % grid.getCols(), grid[i]);
+      origSet_[i] = assign(grid.getRow(i), grid.getCol(i), grid[i]);
     } else {
       unsetIndexes_.emplace(i);
     }
@@ -121,14 +127,29 @@ bool Solver::unpropogateConstraint(int row, int col, int value) {
 
 int Solver::solve() {
   int steps = 0;
-  for (int i = 0; i < grid_.getSize(); ++i) {
-    if (unsetIndexes_.count(i) == 0)
-      continue;
+
+  //for (int i = 0; i < grid_.getSize(); ++i) {
+  //  if (unsetIndexes_.count(i) == 0)
+  //    continue;
+  vector<int> unsetIndexes(begin(unsetIndexes_), end(unsetIndexes_));
+  switch (varSort_) {
+  case VariableSortType::MOST_CONSTRAINED:
+    std::sort(begin(unsetIndexes), end(unsetIndexes), [&](int a, int b) {
+      return movesVec_[a].size() < movesVec_[b].size();
+    });
+    break;
+  case VariableSortType::RANDOMIZED:
+    std::random_shuffle(begin(unsetIndexes), end(unsetIndexes));
+    break;
+  default:
+    break;
+  }
+  for (auto& i : unsetIndexes) {
     for (int j = grid_.getMinValue(); j <= grid_.getMaxValue(); ++j) {
       if (movesVec_[i].count(j) == 0)
         continue;
-      int row = i / grid_.getCols();
-      int col = i % grid_.getCols();
+      int row = grid_.getRow(i);
+      int col = grid_.getCol(i);
 
       steps++;
 
