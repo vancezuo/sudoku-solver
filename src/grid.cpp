@@ -5,9 +5,12 @@
  *      Author: Vance Zuo
  */
 
-#include <src/grid.h>
 #include <vector>
 #include <algorithm>
+
+#include <src/grid.h>
+
+using std::vector;
 
 namespace sudoku {
 
@@ -24,11 +27,11 @@ Grid::Grid(int subrows, int subcols):
   subcols_ = subcols;
 }
 
-Grid::Grid(int subrows, int subcols, std::vector<int> grid):
+Grid::Grid(int subrows, int subcols, vector<int> grid):
     values_((side_ = subrows*subcols) * subrows*subcols) {
   subrows_ = subrows;
   subcols_ = subcols;
-  for (std::size_t i = 0; i < std::min(values_.size(), grid.size()); i++)
+  for (size_t i = 0; i < std::min(values_.size(), grid.size()); i++)
     values_[i] = grid[i];
 }
 
@@ -81,8 +84,8 @@ int Grid::getCol(int index) const {
   return index % getCols();
 }
 
-std::vector<int> Grid::getRowValues(int row, int col) const {
-  std::vector<int> values;
+vector<int> Grid::getRowValues(int row, int col) const {
+  vector<int> values;
   values.reserve(getCols() - 1);
   for (int i = 0; i < getCols(); i++) {
     if (i == col)
@@ -92,8 +95,8 @@ std::vector<int> Grid::getRowValues(int row, int col) const {
   return values;
 }
 
-std::vector<int> Grid::getColValues(int row, int col) const {
-  std::vector<int> values;
+vector<int> Grid::getColValues(int row, int col) const {
+  vector<int> values;
   values.reserve(getRows() - 1);
   for (int i = 0; i < getRows(); i++) {
     if (i == row)
@@ -103,8 +106,8 @@ std::vector<int> Grid::getColValues(int row, int col) const {
   return values;
 }
 
-std::vector<int> Grid::getSubgridValues(int row, int col) const {
-  std::vector<int> values;
+vector<int> Grid::getSubgridValues(int row, int col) const {
+  vector<int> values;
   values.reserve(getSubrows()*getSubcols() - 1);
   const int istart = (row / getSubrows()) * getSubrows();
   const int jstart = (col / getSubcols()) * getSubcols();

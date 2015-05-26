@@ -14,6 +14,8 @@ using testing::Each;
 using testing::Ne;
 using testing::Contains;
 using testing::ContainerEq;
+using std::vector;
+using std::unordered_set;
 
 namespace sudoku {
 

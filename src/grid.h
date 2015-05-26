@@ -10,22 +10,20 @@
 
 #include <vector>
 
-using std::vector;
-
 namespace sudoku {
 
 class Grid {
 public:
   Grid();
   Grid(int subrows, int subcols);
-  Grid(int subrows, int subcols, vector<int> grid);
+  Grid(int subrows, int subcols, std::vector<int> grid);
 
   int& operator ()(int row, int col);
   int& operator [](int index);
 
   int getSubrows() const { return subrows_; }
   int getSubcols() const { return subcols_; }
-  const vector<int>& getValues() const { return values_; }
+  const std::vector<int>& getValues() const { return values_; }
 
   int getRows() const;
   int getCols() const;
@@ -40,15 +38,15 @@ public:
   int getRow(int index) const;
   int getCol(int index) const;
 
-  vector<int> getRowValues(int row, int col) const;
-  vector<int> getColValues(int row, int col) const;
-  vector<int> getSubgridValues(int row, int col) const;
+  std::vector<int> getRowValues(int row, int col) const;
+  std::vector<int> getColValues(int row, int col) const;
+  std::vector<int> getSubgridValues(int row, int col) const;
 
 private:
   int subrows_;
   int subcols_;
   int side_;
-  vector<int> values_;
+  std::vector<int> values_;
 };
 
 } /* namespace sudoku */

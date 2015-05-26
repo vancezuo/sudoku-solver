@@ -5,11 +5,14 @@
  *      Author: Vance Zuo
  */
 
-#include <src/solver.h>
 #include <iterator>
-#include <unordered_map>
 #include <utility>
 #include <algorithm>
+
+#include <src/solver.h>
+
+using std::vector;
+using std::unordered_set;
 
 namespace sudoku {
 
@@ -140,7 +143,7 @@ void Solver::sortIndexes(vector<int>& indexes) {
   }
 }
 
-void Solver::sortMoves(int index, vector<int>& moves) {
+void Solver::sortMoves(vector<int>& moves, int index) {
   switch (valSortType_) {
   case ValueSortType::LEAST_CONSTRAINING: {
     vector<int> constrain(grid_.getMaxValue() + 1);
@@ -183,7 +186,7 @@ int Solver::solve() {
   sortIndexes(unsetIndexes);
   for (auto& i : unsetIndexes) {
     vector<int> moves(begin(movesVec_[i]), end(movesVec_[i]));
-    sortMoves(i, moves);
+    sortMoves(moves, i);
     for (auto& j : moves) {
       int row = grid_.getRow(i);
       int col = grid_.getCol(i);

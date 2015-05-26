@@ -5,13 +5,13 @@
  *      Author: Vance Zuo
  */
 
+#include <unordered_set>
+#include <vector>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <src/grid.h>
-
-#include <unordered_set>
-#include <vector>
 
 using testing::Each;
 using testing::Eq;
