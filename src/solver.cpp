@@ -13,15 +13,15 @@
 
 namespace sudoku {
 
-Solver::Solver(Grid grid, VariableSortType::VarSort varSort,
-    ValueSortType::ValSort valSort):
-        grid_(grid.getSubrows(), grid.getSubcols()),
-        origSet_(grid.getSize()),
-        movesVec_(grid.getSize()),
-        historyVec_(grid.getSize()) {
+Solver::Solver(Grid grid, VariableSortType varSortType,
+    ValueSortType valSortType):
+    grid_(grid.getSubrows(), grid.getSubcols()),
+    origSet_(grid.getSize()),
+    movesVec_(grid.getSize()),
+    historyVec_(grid.getSize()) {
 
-  varSort_ = varSort;
-  valSort_ = valSort;
+  varSortType_ = varSortType;
+  valSortType_ = valSortType;
 
   // Enables all moves for each square.
   for (int i = 0; i < grid.getSize(); ++i) {
@@ -125,29 +125,66 @@ bool Solver::unpropogateConstraint(int row, int col, int value) {
   return true;
 }
 
-int Solver::solve() {
-  int steps = 0;
-
-  //for (int i = 0; i < grid_.getSize(); ++i) {
-  //  if (unsetIndexes_.count(i) == 0)
-  //    continue;
-  vector<int> unsetIndexes(begin(unsetIndexes_), end(unsetIndexes_));
-  switch (varSort_) {
+void Solver::sortIndexes(vector<int>& indexes) {
+  switch (varSortType_) {
   case VariableSortType::MOST_CONSTRAINED:
-    std::sort(begin(unsetIndexes), end(unsetIndexes), [&](int a, int b) {
+    std::sort(begin(indexes), end(indexes), [&](int a, int b) {
       return movesVec_[a].size() < movesVec_[b].size();
     });
     break;
   case VariableSortType::RANDOMIZED:
-    std::random_shuffle(begin(unsetIndexes), end(unsetIndexes));
+    std::random_shuffle(begin(indexes), end(indexes));
     break;
   default:
     break;
   }
+}
+
+void Solver::sortMoves(int index, vector<int>& moves) {
+  switch (valSortType_) {
+  case ValueSortType::LEAST_CONSTRAINING: {
+    vector<int> constrain(grid_.getMaxValue() + 1);
+    int row = grid_.getRow(index);
+    int col = grid_.getCol(index);
+    for (auto& j : moves) {
+      for (int k = 0; k < grid_.getCols(); k++) {
+        if (k != col)
+          constrain[j] += movesVec_[grid_.getIndex(row, k)].count(j);
+        if (k != row)
+          constrain[j] += movesVec_[grid_.getIndex(k, col)].count(j);
+      }
+      int istart = (row / grid_.getSubrows()) * grid_.getSubrows();
+      int jstart = (col / grid_.getSubcols()) * grid_.getSubcols();
+      for (int k = istart; k < istart + grid_.getSubrows(); k++) {
+        for (int l = jstart; l < jstart + grid_.getSubcols(); l++) {
+          if (row == k || col == l)
+            continue;
+
+          constrain[j] += movesVec_[grid_.getIndex(k, l)].count(j);
+        }
+      }
+    }
+    std::sort(begin(moves), end(moves), [&](int a, int b) {
+      return constrain[a] < constrain[b];
+    });
+  } break;
+  case ValueSortType::RANDOMIZED:
+    std::random_shuffle(begin(moves), end(moves));
+    break;
+  default:
+    break;
+  }
+}
+
+int Solver::solve() {
+  int steps = 0;
+
+  vector<int> unsetIndexes(begin(unsetIndexes_), end(unsetIndexes_));
+  sortIndexes(unsetIndexes);
   for (auto& i : unsetIndexes) {
-    for (int j = grid_.getMinValue(); j <= grid_.getMaxValue(); ++j) {
-      if (movesVec_[i].count(j) == 0)
-        continue;
+    vector<int> moves(begin(movesVec_[i]), end(movesVec_[i]));
+    sortMoves(i, moves);
+    for (auto& j : moves) {
       int row = grid_.getRow(i);
       int col = grid_.getCol(i);
 

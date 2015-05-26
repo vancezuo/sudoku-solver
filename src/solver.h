@@ -19,20 +19,19 @@ using std::unordered_set;
 
 namespace sudoku {
 
-namespace VariableSortType { enum VarSort {
+enum class VariableSortType {
   NONE, RANDOMIZED, MOST_CONSTRAINED
-}; }
+};
 
-namespace ValueSortType { enum ValSort {
-  NONE // , RANDOMIZED, LEAST_CONSTRAINING
-}; }
+enum class ValueSortType {
+  NONE, RANDOMIZED, LEAST_CONSTRAINING
+};
 
 class Solver {
 public:
-
   Solver(Grid grid,
-      VariableSortType::VarSort varSort=VariableSortType::MOST_CONSTRAINED,
-      ValueSortType::ValSort valSort=ValueSortType::NONE);
+      VariableSortType varSortType = VariableSortType::MOST_CONSTRAINED,
+      ValueSortType valSortType = ValueSortType::LEAST_CONSTRAINING);
 
   const Grid& getGrid() const { return grid_; }
   const vector<bool>& getOrigSetVec() const { return origSet_; }
@@ -58,12 +57,13 @@ private:
   vector<unordered_set<int>> movesVec_;
   vector<vector<int>> historyVec_;
 
-  VariableSortType::VarSort varSort_;
-  ValueSortType::ValSort valSort_;
+  VariableSortType varSortType_;
+  ValueSortType valSortType_;
 
   bool propogateConstraint(int row, int col, int value, int origIndex);
   bool unpropogateConstraint(int row, int col, int value);
-
+  void sortIndexes(vector<int>& indexes);
+  void sortMoves(int index, vector<int>& moves);
 };
 
 } /* namespace sudoku */
