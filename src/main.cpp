@@ -9,9 +9,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 #include <src/grid.h>
 #include <src/solver.h>
@@ -21,6 +23,9 @@ using std::vector;
 using std::istream;
 using std::ifstream;
 using std::locale;
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
 using sudoku::Grid;
 using sudoku::Solver;
 
@@ -93,6 +98,7 @@ int main(int argc, char **argv) {
   }
 
   int completedGrids = 0;
+  long totalNs = 0;
   while (true) {
     Grid grid(subrows, subcols);
     int numValues = readGrid(*input, grid);
@@ -101,17 +107,27 @@ int main(int argc, char **argv) {
         printf("Warning: Incomplete definition (%d values).\n", numValues);
       break;
     }
-    printGrid(grid);
+    if (input != &std::cin)
+      printGrid(grid);
+
+    auto begin = high_resolution_clock::now();
+
     Solver solver(grid);
     int steps = solver.solve();
+
+    auto end = high_resolution_clock::now();
+    auto ns = duration_cast<nanoseconds>(end - begin).count();
+    totalNs += ns;
+
     printf(" ||\n");
-    printf(" || (%d steps)\n", steps);
+    printf(" || (%d steps, %.3fs)\n", steps, ns / 1000000000.0);
     printf(" \\/\n");
     printGrid(solver.getGrid());
     printf("----\n");
+
     completedGrids++;
   }
-  printf("Solved %d grids", completedGrids);
+  printf("Solved %d grids (%.3fs)", completedGrids, totalNs / 1000000000.0);
 
   if (ifs.is_open())
     ifs.close();
