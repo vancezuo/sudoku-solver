@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
   }
 
   int completedGrids = 0;
-  long totalNs = 0;
+  double totalNs = 0;
   while (true) {
     Grid grid(subrows, subcols);
     int numValues = readGrid(*input, grid);
