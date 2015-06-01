@@ -10,6 +10,7 @@
 
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 namespace sudoku {
 
@@ -35,7 +36,7 @@ public:
   const std::unordered_set<int>& getValues(int row, int col) const;
   const std::unordered_set<int>& getValues(int index) const;
 
-  const std::vector<std::vector<int>>& getNeighbors() const { return neighbors_; }
+  const std::vector<std::vector<int>>& getNeighbors() const { return *neighbors_; }
   const std::vector<int>& getNeighbors(int row, int col) const;
   const std::vector<int>& getNeighbors(int index) const;
 
@@ -50,7 +51,7 @@ private:
   int subrows_, subcols_;
   int side_;
   std::vector<std::unordered_set<int>> values_;
-  std::vector<std::vector<int>> neighbors_;
+  std::shared_ptr<std::vector<std::vector<int>>> neighbors_;
 
   void initNeighbors();
   void initValues();

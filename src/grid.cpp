@@ -15,8 +15,7 @@ using std::unordered_set;
 namespace sudoku {
 
 Grid::Grid():
-    values_(81),
-    neighbors_(81) {
+    values_(81) {
   subrows_ = 3;
   subcols_ = 3;
   side_ = 9;
@@ -25,8 +24,7 @@ Grid::Grid():
 }
 
 Grid::Grid(int subrows, int subcols):
-    values_((side_ = subrows*subcols) * subrows*subcols),
-    neighbors_(side_ * side_) {
+    values_((side_ = subrows*subcols) * subrows*subcols) {
   subrows_ = subrows;
   subcols_ = subcols;
   initNeighbors();
@@ -34,8 +32,7 @@ Grid::Grid(int subrows, int subcols):
 }
 
 Grid::Grid(int subrows, int subcols, const vector<int>& grid):
-    values_((side_ = subrows*subcols) * subrows*subcols),
-    neighbors_(side_ * side_) {
+    values_((side_ = subrows*subcols) * subrows*subcols) {
   subrows_ = subrows;
   subcols_ = subcols;
   initNeighbors();
@@ -48,6 +45,7 @@ Grid::Grid(int subrows, int subcols, const vector<int>& grid):
 
 void Grid::initValues() {
   for (unsigned int i = 0; i < values_.size(); ++i) {
+    values_[i].reserve(getMaxValue() - getMinValue() + 1);
     for (int j = getMinValue(); j <= getMaxValue(); ++j) {
       values_[i].emplace(j);
     }
@@ -55,15 +53,16 @@ void Grid::initValues() {
 }
 
 void Grid::initNeighbors() {
+  neighbors_ = std::make_shared<vector<vector<int>>>(side_ * side_);
   for (int i = 0; i < size(); ++i) {
     int row = getRow(i);
     int col = getCol(i);
 
     for (int j = 0; j < side_; ++j) {
       if (col != j)
-        neighbors_[i].push_back(getIndex(row, j));
+        (*neighbors_)[i].push_back(getIndex(row, j));
       if (row != j)
-        neighbors_[i].push_back(getIndex(j, col));
+        (*neighbors_)[i].push_back(getIndex(j, col));
     }
 
     const int istart = (row / subrows_) * subrows_;
@@ -72,11 +71,11 @@ void Grid::initNeighbors() {
       for (int k = jstart; k < jstart + subcols_; ++k) {
         if (row == j || col == k)
           continue;
-        neighbors_[i].push_back(getIndex(j, k));
+        (*neighbors_)[i].push_back(getIndex(j, k));
       }
     }
 
-    std::sort(begin(neighbors_[i]), end(neighbors_[i]));
+    std::sort(begin((*neighbors_)[i]), end((*neighbors_)[i]));
   }
 }
 
@@ -117,11 +116,11 @@ const unordered_set<int>& Grid::getValues(int index) const {
 }
 
 const std::vector<int>& Grid::getNeighbors(int row, int col) const {
-  return neighbors_[getIndex(row, col)];
+  return (*neighbors_)[getIndex(row, col)];
 }
 
 const std::vector<int>& Grid::getNeighbors(int index) const {
-  return neighbors_[index];
+  return (*neighbors_)[index];
 }
 
 int Grid::getIndex(int row, int col) const {
@@ -148,7 +147,7 @@ bool Grid::assign(int index, int value) {
 }
 
 bool Grid::propogateFrom(int index, int value) {
-  for (auto& i : neighbors_[index]) {
+  for (auto& i : (*neighbors_)[index]) {
     if (!propogateTo(i, value))
       return false;
   }
