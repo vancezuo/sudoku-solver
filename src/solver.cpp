@@ -68,7 +68,7 @@ int Solver::selectIndex(Grid& grid) {
     for (int i = 0; i < grid.size(); ++i) {
       if (grid[i].size() == 1)
         continue;
-      if (rand() % ++numUnset < 1)
+      if (std::default_random_engine()() % ++numUnset < 1)
         randIndex = i;
     }
     return randIndex;
@@ -97,7 +97,7 @@ void Solver::sortMoves(Grid& grid, vector<int>& moves, int index) {
     });
   } break;
   case ValueSortType::RANDOMIZED:
-    std::random_shuffle(begin(moves), end(moves));
+    std::shuffle(begin(moves), end(moves), std::default_random_engine());
     break;
   default:
     break;
