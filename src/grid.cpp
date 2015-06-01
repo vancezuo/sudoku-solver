@@ -5,49 +5,94 @@
  *      Author: Vance Zuo
  */
 
-#include <vector>
 #include <algorithm>
 
 #include <src/grid.h>
 
 using std::vector;
+using std::unordered_set;
 
 namespace sudoku {
 
 Grid::Grid():
-    values_(81) {
+    values_(81),
+    neighbors_(81) {
   subrows_ = 3;
   subcols_ = 3;
   side_ = 9;
+  initNeighbors();
+  initValues();
 }
 
 Grid::Grid(int subrows, int subcols):
-    values_((side_ = subrows*subcols) * subrows*subcols) {
+    values_((side_ = subrows*subcols) * subrows*subcols),
+    neighbors_(side_ * side_) {
   subrows_ = subrows;
   subcols_ = subcols;
+  initNeighbors();
+  initValues();
 }
 
-Grid::Grid(int subrows, int subcols, vector<int> grid):
-    values_((side_ = subrows*subcols) * subrows*subcols) {
+Grid::Grid(int subrows, int subcols, const vector<int>& grid):
+    values_((side_ = subrows*subcols) * subrows*subcols),
+    neighbors_(side_ * side_) {
   subrows_ = subrows;
   subcols_ = subcols;
-  for (size_t i = 0; i < std::min(values_.size(), grid.size()); i++)
-    values_[i] = grid[i];
+  initNeighbors();
+  initValues();
+  for (int i = 0; i < (signed) std::min(values_.size(), grid.size()); i++) {
+    if (getMinValue() <= grid[i] && grid[i] <= getMaxValue())
+      assign(i, grid[i]);
+  }
 }
 
-int& Grid::operator ()(int row, int col) {
+void Grid::initValues() {
+  for (unsigned int i = 0; i < values_.size(); ++i) {
+    for (int j = getMinValue(); j <= getMaxValue(); ++j) {
+      values_[i].emplace(j);
+    }
+  }
+}
+
+void Grid::initNeighbors() {
+  for (int i = 0; i < size(); ++i) {
+    int row = getRow(i);
+    int col = getCol(i);
+
+    for (int j = 0; j < side_; ++j) {
+      if (col != j)
+        neighbors_[i].push_back(getIndex(row, j));
+      if (row != j)
+        neighbors_[i].push_back(getIndex(j, col));
+    }
+
+    const int istart = (row / subrows_) * subrows_;
+    const int jstart = (col / subcols_) * subcols_;
+    for (int j = istart; j < istart + subrows_; ++j) {
+      for (int k = jstart; k < jstart + subcols_; ++k) {
+        if (row == j || col == k)
+          continue;
+        neighbors_[i].push_back(getIndex(j, k));
+      }
+    }
+
+    std::sort(begin(neighbors_[i]), end(neighbors_[i]));
+  }
+}
+
+unordered_set<int>& Grid::operator ()(int row, int col) {
   return values_[getIndex(row, col)];
 }
 
-int& Grid::operator [](int index) {
+unordered_set<int>& Grid::operator [](int index) {
   return values_[index];
 }
 
-int Grid::getRows() const {
+int Grid::getNumRows() const {
   return side_;
 }
 
-int Grid::getCols() const {
+int Grid::getNumCols() const {
   return side_;
 }
 
@@ -59,66 +104,65 @@ int Grid::getMaxValue() const {
   return side_;
 }
 
-int Grid::getSize() const {
+int Grid::size() const {
   return values_.size();
 }
 
-int Grid::getValue(int row, int col) const {
+const unordered_set<int>& Grid::getValues(int row, int col) const {
   return values_[getIndex(row, col)];
 }
 
-int Grid::getValue(int index) const {
+const unordered_set<int>& Grid::getValues(int index) const {
   return values_[index];
 }
 
-int Grid::getIndex(int row, int col) const {
-  return row * getCols() + col;
+const std::vector<int>& Grid::getNeighbors(int row, int col) const {
+  return neighbors_[getIndex(row, col)];
 }
 
+const std::vector<int>& Grid::getNeighbors(int index) const {
+  return neighbors_[index];
+}
+
+int Grid::getIndex(int row, int col) const {
+  return row * getNumCols() + col;
+}
 
 int Grid::getRow(int index) const {
-  return index / getCols();
+  return index / getNumCols();
 }
 
 int Grid::getCol(int index) const {
-  return index % getCols();
+  return index % getNumCols();
 }
 
-vector<int> Grid::getRowValues(int row, int col) const {
-  vector<int> values;
-  values.reserve(getCols() - 1);
-  for (int i = 0; i < getCols(); i++) {
-    if (i == col)
-      continue;
-    values.push_back(values_[getIndex(row, i)]);
-  }
-  return values;
+bool Grid::assign(int row, int col, int value) {
+  return assign(getIndex(row, col), value);
 }
 
-vector<int> Grid::getColValues(int row, int col) const {
-  vector<int> values;
-  values.reserve(getRows() - 1);
-  for (int i = 0; i < getRows(); i++) {
-    if (i == row)
-      continue;
-    values.push_back(values_[getIndex(i, col)]);
-  }
-  return values;
+bool Grid::assign(int index, int value) {
+  if (!values_[index].count(value) || values_[index].size() == 1)
+    return false;
+  values_[index] = { value };
+  return propogateFrom(index, value);
 }
 
-vector<int> Grid::getSubgridValues(int row, int col) const {
-  vector<int> values;
-  values.reserve(getSubrows()*getSubcols() - 1);
-  const int istart = (row / getSubrows()) * getSubrows();
-  const int jstart = (col / getSubcols()) * getSubcols();
-  for (int i = istart; i < istart + getSubrows(); i++) {
-    for (int j = jstart; j < jstart + getSubcols(); j++) {
-      if (row == i && col == j)
-        continue;
-      values.push_back(values_[getIndex(i, j)]);
-    }
+bool Grid::propogateFrom(int index, int value) {
+  for (auto& i : neighbors_[index]) {
+    if (!propogateTo(i, value))
+      return false;
   }
-  return values;
+  return true;
+}
+
+bool Grid::propogateTo(int index, int value) {
+  if (!values_[index].erase(value))
+    return true;
+  if (values_[index].empty())
+    return false;
+  if (values_[index].size() == 1)
+    return propogateFrom(index, *values_[index].begin());
+  return true;
 }
 
 } /* namespace sudoku */

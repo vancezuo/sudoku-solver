@@ -31,9 +31,13 @@ using sudoku::Solver;
 
 void printGrid(const Grid& grid) {
   int numberSpacing = floor(log10(grid.getMaxValue())) + 1;
-  for (int i = 0; i < grid.getRows(); ++i) {
-    for (int j = 0; j < grid.getCols(); ++j) {
-      printf("%*d ", numberSpacing, grid.getValue(i, j));
+  for (int i = 0; i < grid.getNumRows(); ++i) {
+    for (int j = 0; j < grid.getNumCols(); ++j) {
+      if (grid.getValues(i, j).size() == 1) {
+        printf("%*d ", numberSpacing, *grid.getValues(i, j).begin());
+      } else {
+        printf("%*s ", numberSpacing, ".");
+      }
     }
     printf("\n");
   }
@@ -42,7 +46,7 @@ void printGrid(const Grid& grid) {
 
 int readGrid(istream& input, Grid& grid) {
   int value;
-  for (int i = 0; i < grid.getSize(); ) {
+  for (int i = 0; i < grid.size(); ) {
     if (input.peek() == EOF)
       return i;
     if (!(input >> value)) {
@@ -50,9 +54,9 @@ int readGrid(istream& input, Grid& grid) {
       input.ignore(1);
       continue;
     }
-    grid[i++] = value;
+    grid.assign(i++, value);
   }
-  return grid.getSize();
+  return grid.size();
 }
 
 void printUsage() {
@@ -102,7 +106,7 @@ int main(int argc, char **argv) {
   while (true) {
     Grid grid(subrows, subcols);
     int numValues = readGrid(*input, grid);
-    if (numValues < grid.getSize()) {
+    if (numValues < grid.size()) {
       if (numValues > 0 || completedGrids == 0)
         printf("Warning: Incomplete definition (%d values).\n", numValues);
       break;
@@ -113,7 +117,9 @@ int main(int argc, char **argv) {
     auto begin = high_resolution_clock::now();
 
     Solver solver(grid);
-    int steps = solver.solve();
+    Grid solution;
+    int steps;
+    bool solved = solver.solve(solution, steps);
 
     auto end = high_resolution_clock::now();
     auto ns = duration_cast<nanoseconds>(end - begin).count();
@@ -122,7 +128,11 @@ int main(int argc, char **argv) {
     printf(" ||\n");
     printf(" || (%d steps, %.3fs)\n", steps, ns / 1000000000.0);
     printf(" \\/\n");
-    printGrid(solver.getGrid());
+    if (solved) {
+      printGrid(solution);
+    } else {
+      printf("[NO SOLUTION]\n");
+    }
     printf("----\n");
 
     completedGrids++;

@@ -8,6 +8,7 @@
 #ifndef GRID_H_
 #define GRID_H_
 
+#include <unordered_set>
 #include <vector>
 
 namespace sudoku {
@@ -16,37 +17,45 @@ class Grid {
 public:
   Grid();
   Grid(int subrows, int subcols);
-  Grid(int subrows, int subcols, std::vector<int> grid);
+  Grid(int subrows, int subcols, const std::vector<int>& grid);
 
-  int& operator ()(int row, int col);
-  int& operator [](int index);
+  std::unordered_set<int>& operator ()(int row, int col);
+  std::unordered_set<int>& operator [](int index);
 
-  int getSubrows() const { return subrows_; }
   int getSubcols() const { return subcols_; }
-  const std::vector<int>& getValues() const { return values_; }
+  int getSubrows() const { return subrows_; }
 
-  int getRows() const;
-  int getCols() const;
+  int getNumRows() const;
+  int getNumCols() const;
   int getMinValue() const;
   int getMaxValue() const;
-  int getSize() const;
+  int size() const;
 
-  int getValue(int row, int col) const;
-  int getValue(int index) const;
+  const std::vector<std::unordered_set<int>>& getValues() const { return values_; }
+  const std::unordered_set<int>& getValues(int row, int col) const;
+  const std::unordered_set<int>& getValues(int index) const;
+
+  const std::vector<std::vector<int>>& getNeighbors() const { return neighbors_; }
+  const std::vector<int>& getNeighbors(int row, int col) const;
+  const std::vector<int>& getNeighbors(int index) const;
 
   int getIndex(int row, int col) const;
   int getRow(int index) const;
   int getCol(int index) const;
 
-  std::vector<int> getRowValues(int row, int col) const;
-  std::vector<int> getColValues(int row, int col) const;
-  std::vector<int> getSubgridValues(int row, int col) const;
+  bool assign(int row, int col, int value);
+  bool assign(int index, int value);
 
 private:
-  int subrows_;
-  int subcols_;
+  int subrows_, subcols_;
   int side_;
-  std::vector<int> values_;
+  std::vector<std::unordered_set<int>> values_;
+  std::vector<std::vector<int>> neighbors_;
+
+  void initNeighbors();
+  void initValues();
+  bool propogateFrom(int index, int value);
+  bool propogateTo(int index, int value);
 };
 
 } /* namespace sudoku */

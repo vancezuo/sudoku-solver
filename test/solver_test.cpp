@@ -14,6 +14,7 @@ using testing::Each;
 using testing::Ne;
 using testing::Contains;
 using testing::ContainerEq;
+
 using std::vector;
 using std::unordered_set;
 
@@ -22,61 +23,39 @@ namespace sudoku {
 // Test helper constants/functions.
 namespace solverTest {
 
-const int subrows = 2, subcols = 2;
+const int subrows = 3, subcols = 3;
 const std::vector<int> initVec = {
-    1, 0,  0, 0,
-    0, 0,  1, 0,
+    0, 0, 5,  3, 0, 0,  0, 0, 0,
+    8, 0, 0,  0, 0, 0,  0, 2, 0,
+    0, 7, 0,  0, 1, 0,  5, 0, 0,
 
-    0, 4,  0, 0,
-    0, 0,  0, 3,
+    4, 0, 0,  0, 0, 5,  3, 0, 0,
+    0, 1, 0,  0, 7, 0,  0, 0, 6,
+    0, 0, 3,  2, 0, 0,  0, 8, 0,
+
+    0, 6, 0,  5, 0, 0,  0, 0, 9,
+    0, 0, 4,  0, 0, 0,  0, 3, 0,
+    0, 0, 0,  0, 0, 9,  7, 0, 0,
 };
 const std::vector<int> solutionVec = {
-    1, 2,  3, 4,
-    4, 3,  1, 2,
+    1, 4, 5,  3, 2, 7,  6, 9, 8,
+    8, 3, 9,  6, 5, 4,  1, 2, 7,
+    6, 7, 2,  9, 1, 8,  5, 4, 3,
 
-    3, 4,  2, 1,
-    2, 1,  4, 3,
+    4, 9, 6,  1, 8, 5,  3, 7, 2,
+    2, 1, 8,  4, 7, 3,  9, 5, 6,
+    7, 5, 3,  2, 9, 6,  4, 8, 1,
+
+    3, 6, 7,  5, 4, 2,  8, 1, 9,
+    9, 8, 4,  7, 6, 1,  2, 3, 5,
+    5, 2, 1,  8, 3, 9,  7, 6, 4,
 };
 
 const Grid initGrid(subrows, subcols, initVec);
 const Grid solutionGrid(subrows, subcols, solutionVec);
 
-Solver init() {
-  return Solver(initGrid);
-}
-
-void checkMoves(Solver& solver, int row, int col, int val, bool contains) {
-  for (int i = 0; i < solver.getGrid().getCols(); ++i) {
-    if (i == col)
-      continue;
-    if (contains) {
-      EXPECT_THAT(solver.getMoves(row, i), Contains(val));
-    } else {
-      EXPECT_THAT(solver.getMoves(row, i), Each(Ne(val)));
-    }
-  }
-
-  for (int i = 0; i < solver.getGrid().getRows(); ++i) {
-    if (i == row)
-      continue;
-    if (contains) {
-      EXPECT_THAT(solver.getMoves(i, col), Contains(val));
-    } else {
-      EXPECT_THAT(solver.getMoves(i, col), Each(Ne(val)));
-    }
-  }
-
-  const int istart = (row / solverTest::subrows) * solverTest::subrows;
-  const int jstart = (col / solverTest::subcols) * solverTest::subcols;
-  for (int i = istart; i < istart + solverTest::subrows; i++) {
-    for (int j = jstart; j < jstart + solverTest::subcols; j++) {
-      if (contains) {
-        EXPECT_THAT(solver.getMoves(i, j), Contains(val));
-      } else {
-        EXPECT_THAT(solver.getMoves(i, j), Each(Ne(val)));
-      }
-    }
-  }
+Solver init(VariableSortType varSortType, ValueSortType valSortType) {
+  return Solver(initGrid, varSortType, valSortType);
 }
 
 } /* namespace solverTest */
@@ -85,156 +64,44 @@ void checkMoves(Solver& solver, int row, int col, int val, bool contains) {
 
 // Tests constructor with initGrid argument.
 TEST(Solver, constructorOneArg) {
-  Solver solver = solverTest::init();
+  Solver solver = solverTest::init(VariableSortType::NONE,
+      ValueSortType::NONE);
 
   EXPECT_EQ(solver.getGrid().getValues(), solverTest::initGrid.getValues());
-  EXPECT_EQ(solver.getMovesVec().size(), solverTest::initGrid.getSize());
-  EXPECT_EQ(solver.getHistoryVec().size(), solverTest::initGrid.getSize());
-}
-
-// Tests the originally set at (row, col) method.
-TEST(Solver, isOrigSet) {
-  Solver solver = solverTest::init();
-
-  for (int i = 0; i < solver.getGrid().getRows(); ++i) {
-    for (int j = 0; j < solver.getGrid().getCols(); ++j) {
-      int index = solver.getGrid().getIndex(i, j);
-      EXPECT_EQ(solver.isOrigSet(i, j), (solverTest::initVec[index] != 0));
-    }
-  }
-}
-
-// Tests the get moves at (row, col) method.
-TEST(Solver, getMoves) {
-  Solver solver = solverTest::init();
-
-  unordered_set<int> result = solver.getMoves(1, 1);
-  unordered_set<int> actual({2, 3});
-  EXPECT_EQ(result, actual);
-}
-
-// Tests the get history at (row, col) method.
-TEST(Solver, getHistory) {
-  Solver solver = solverTest::init();
-
-  ASSERT_EQ(solver.assign(1, 1, 2), true);
-
-  vector<int> history = solver.getHistory(1, 1);
-
-  unordered_set<int> result(history.begin(), history.end());
-  unordered_set<int> actual({0, 1, 4, 5, 6, 7, 9, 13});
-
-  EXPECT_EQ(history.size(), actual.size());
-  EXPECT_THAT(result, ContainerEq(actual));
-}
-
-// Tests the assign value to (row, col) method.
-TEST(Solver, assignValid) {
-  const int row = 2, col = 2, val = 2;
-  Solver solver = solverTest::init();
-  int prevNumMoves = solver.getMoves(row, col).size();
-
-  EXPECT_EQ(solver.assign(row, col, val), true);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), val);
-  EXPECT_LT(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_LT(0, solver.getHistory(row, col).size());
-
-  solverTest::checkMoves(solver, row, col, val, false);
-}
-
-TEST(Solver, assignInvalidRow) {
-  const int row = 2, col = 2, val = 4;
-  Solver solver = solverTest::init();
-  int prevNumMoves = solver.getMoves(row, col).size();
-
-  EXPECT_EQ(solver.assign(row, col, val), false);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), 0);
-  EXPECT_EQ(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_EQ(solver.getHistory(row, col).size(), 0);
-}
-
-TEST(Solver, assignInvalidCol) {
-  const int row = 2, col = 2, val = 1;
-  Solver solver = solverTest::init();
-  int prevNumMoves = solver.getMoves(row, col).size();
-
-  EXPECT_EQ(solver.assign(row, col, val), false);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), 0);
-  EXPECT_EQ(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_EQ(solver.getHistory(row, col).size(), 0);
-}
-
-TEST(Solver, assignInvalidSubgrid) {
-  const int row = 2, col = 2, val = 3;
-  Solver solver = solverTest::init();
-  int prevNumMoves = solver.getMoves(row, col).size();
-
-  EXPECT_EQ(solver.assign(row, col, val), false);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), 0);
-  EXPECT_EQ(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_EQ(solver.getHistory(row, col).size(), 0);
-}
-
-TEST(Solver, assignInvalidOccupied) {
-  const int row = 2, col = 2, val = 1;
-  Solver solver = solverTest::init();
-  int prevValue = solver.getGrid().getValue(row, col);
-  int prevNumMoves = solver.getMoves(row, col).size();
-  int prevNumHistory = solver.getHistory(row, col).size();
-
-  EXPECT_EQ(solver.assign(row, col, val), false);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), prevValue);
-  EXPECT_EQ(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_EQ(solver.getHistory(row, col).size(), prevNumHistory);
-}
-
-// Tests the unassign value at (row, col) method.
-TEST(Solver, unassignValid) {
-  const int row = 2, col = 2, val = 2;
-  Solver solver = solverTest::init();
-  int prevValue = solver.getGrid().getValue(row, col);
-  int prevNumMoves = solver.getMoves(row, col).size();
-  int prevNumHistory = solver.getHistory(row, col).size();
-
-  ASSERT_EQ(solver.assign(row, col, val), true);
-
-  EXPECT_EQ(solver.unassign(row, col), true);
-  EXPECT_EQ(solver.getGrid().getValue(row, col), prevValue);
-  EXPECT_EQ(solver.getMoves(row, col).size(), prevNumMoves);
-  EXPECT_EQ(solver.getHistory(row, col).size(), prevNumHistory);
-
-  solverTest::checkMoves(solver, row, col, val, true);
-}
-
-TEST(Solver, unassignInvalid) {
-  const int row = 2, col = 2, val = 2;
-  Solver solver = solverTest::init();
-  ASSERT_EQ(solver.assign(row, col, val), true);
-  EXPECT_EQ(solver.unassign(0, 0), false);
 }
 
 // Tests the solve method.
-TEST(Solver, solve) {
-  Solver solver = solverTest::init();
+TEST(Solver, solveNoneNone) {
+  Solver solver = solverTest::init(VariableSortType::NONE,
+      ValueSortType::NONE);
+  Grid solution;
+  int steps = 0;
 
-  EXPECT_LT(0, solver.solve());
-  EXPECT_THAT(solver.getGrid().getValues(), ContainerEq(solverTest::solutionVec));
+  EXPECT_TRUE(solver.solve(solution, steps));
+  EXPECT_EQ(solution.getValues(), solverTest::solutionGrid.getValues());
+  EXPECT_GE(steps, 1);
 }
 
-// Tests the reset method.
-TEST(Solver, reset) {
-  const int row = 2, col = 2, val = 2;
-  Solver solver = solverTest::init();
+TEST(Solver, solveRandom) {
+  Solver solver = solverTest::init(VariableSortType::RANDOMIZED,
+      ValueSortType::RANDOMIZED);
+  Grid solution;
+  int steps = 0;
 
-  const vector<unordered_set<int>> prevMoves = solver.getMovesVec();
-  const vector<vector<int>> prevHistory = solver.getHistoryVec();
+  EXPECT_TRUE(solver.solve(solution, steps));
+  EXPECT_EQ(solution.getValues(), solverTest::solutionGrid.getValues());
+  EXPECT_GE(steps, 1);
+}
 
-  ASSERT_EQ(solver.assign(row, col, val), true);
+TEST(Solver, solveOpt) {
+  Solver solver = solverTest::init(VariableSortType::MOST_CONSTRAINED,
+      ValueSortType::LEAST_CONSTRAINING);
+  Grid solution;
+  int steps = 0;
 
-  solver.reset();
-  EXPECT_EQ(solver.getGrid().getValues(), solverTest::initGrid.getValues());
-  EXPECT_EQ(solver.getMovesVec(), prevMoves);
-  EXPECT_EQ(solver.getHistoryVec(), prevHistory);
+  EXPECT_TRUE(solver.solve(solution, steps));
+  EXPECT_EQ(solution.getValues(), solverTest::solutionGrid.getValues());
+  EXPECT_GE(steps, 1);
 }
 
 } /* namespace sudoku */
